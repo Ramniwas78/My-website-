@@ -34,5 +34,39 @@ app.delete('/api/admin/enquiries/:id',auth,(req,res)=>{db.prepare('DELETE FROM e
 function crud(table,fields){app.get('/api/admin/'+table,auth,(req,res)=>res.json(db.prepare(`SELECT * FROM ${table} ORDER BY id DESC`).all()));app.post('/api/admin/'+table,auth,(req,res)=>{const vals=fields.map(f=>req.body[f]??'');const qs=fields.map(()=>'?').join(',');const info=db.prepare(`INSERT INTO ${table}(${fields.join(',')}) VALUES(${qs})`).run(...vals);res.json(db.prepare(`SELECT * FROM ${table} WHERE id=?`).get(info.lastInsertRowid));});app.put('/api/admin/'+table+'/:id',auth,(req,res)=>{const vals=fields.map(f=>req.body[f]??'');db.prepare(`UPDATE ${table} SET ${fields.map(f=>f+'=?').join(',')} WHERE id=?`).run(...vals,req.params.id);res.json({ok:true})});app.delete('/api/admin/'+table+'/:id',auth,(req,res)=>{db.prepare(`DELETE FROM ${table} WHERE id=?`).run(req.params.id);res.json({ok:true})});}
 crud('services',['title','description','icon','tags']);crud('gallery',['title','image']);crud('testimonials',['name','role','text','initials']);
 app.post('/api/admin/upload',auth,upload.single('image'),(req,res)=>res.json({url:'/assets/'+req.file.filename}));
-app.get('/admin',(req,res)=>res.sendFile(path.join(__dirname,'public/admin.html')));
+app.get('/admin',(req,res)=>res.sendFile(path.join(__dirname,'public/admin.html'))); app.post('/api/admin/change-password',auth,(req,res)=>{
+  const {currentPassword,newPassword}=req.body;
+
+  if(!currentPassword || !newPassword){
+    return res.status(400).json({
+      message:'Current password and new password are required.'
+    });
+  }
+
+  if(newPassword.length < 8){
+    return res.status(400).json({
+      message:'New password must be at least 8 characters.'
+    });
+  }
+
+  const user=db.prepare(
+    'SELECT * FROM admins WHERE id=?'
+  ).get(req.user.id);
+
+  if(!user || !bcrypt.compareSync(currentPassword,user.password_hash)){
+    return res.status(401).json({
+      message:'Current password is incorrect.'
+    });
+  }
+
+  const newHash=bcrypt.hashSync(newPassword,10);
+
+  db.prepare(
+    'UPDATE admins SET password_hash=? WHERE id=?'
+  ).run(newHash,req.user.id);
+
+  res.json({
+    message:'Password changed successfully.'
+  });
+});
 app.listen(PORT,()=>console.log(`Al Bidoor Marble running on http://localhost:${PORT}`));
