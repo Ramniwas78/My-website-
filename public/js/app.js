@@ -198,15 +198,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // WhatsApp message
         const whatsappMessage =
-`Hello Al Bidoor Marble Company,
+  "Hello Al Bidoor Marble Company\n\n" +
+  "New Customer Enquiry\n\n" +
+  "Name: " + (name || "Not provided") + "\n" +
+  "Customer Phone: " + (phone || "Not provided") + "\n" +
+  "Email: " + (email || "Not provided") + "\n" +
+  "Service: " + (service || "Not selected") + "\n" +
+  "Project Details: " + (message || "Not provided");
 
-New Customer Enquiry
-
-Name: ${name}
-Phone: ${phone}
-Email: ${email || "Not provided"}
-Service: ${service}
-Project Details: ${message}`;
+const whatsappUrl =
+  "https://wa.me/96879159463?text=" +
+  encodeURIComponent(whatsappMessage);
 
         const whatsappUrl =
           "https://wa.me/96879159463?text=" +96879159463
