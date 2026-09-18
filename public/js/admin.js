@@ -105,6 +105,10 @@ async function show(section) {
       await showTestimonials();
     }
 
+    if (section === "password") {
+      showPassword();
+    }
+
   } catch (error) {
     content.innerHTML =
       `<p style="color:red;">${escapeHtml(error.message)}</p>`;
@@ -386,6 +390,87 @@ async function deleteTestimonial(id) {
   });
 
   show("testimonials");
+}
+
+function showPassword() {
+  content.innerHTML = `
+    <h1>Change Password</h1>
+
+    <div class="admin-form">
+      <input
+        id="currentPassword"
+        type="password"
+        placeholder="Current Password"
+      >
+
+      <input
+        id="newPassword"
+        type="password"
+        placeholder="New Password"
+      >
+
+      <input
+        id="confirmPassword"
+        type="password"
+        placeholder="Confirm New Password"
+      >
+
+      <button onclick="changePassword()">
+        Change Password
+      </button>
+
+      <p id="passwordMessage"></p>
+    </div>
+  `;
+}
+
+async function changePassword() {
+  const currentPassword =
+    document.getElementById("currentPassword").value;
+
+  const newPassword =
+    document.getElementById("newPassword").value;
+
+  const confirmPassword =
+    document.getElementById("confirmPassword").value;
+
+  const messageBox =
+    document.getElementById("passwordMessage");
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    messageBox.textContent = "Please fill all fields.";
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    messageBox.textContent = "New passwords do not match.";
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    messageBox.textContent =
+      "New password must be at least 8 characters.";
+    return;
+  }
+
+  try {
+    const data = await api("/api/admin/change-password", {
+      method: "POST",
+      body: JSON.stringify({
+        currentPassword,
+        newPassword
+      })
+    });
+
+    messageBox.textContent = data.message;
+
+    document.getElementById("currentPassword").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
+
+  } catch (error) {
+    messageBox.textContent = error.message;
+  }
 }
 
 function escapeHtml(value) {
