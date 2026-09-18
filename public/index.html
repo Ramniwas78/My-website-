@@ -69,7 +69,15 @@
     <form class="contact-form" id="contactForm">
       <div class="form-row"><div class="form-group"><label>Full Name</label><input name="name" required placeholder="Your full name"></div><div class="form-group"><label>Phone</label><input name="phone" required placeholder="+968 XXXX XXXX"></div></div>
       <div class="form-group"><label>Email</label><input type="email" name="email" placeholder="email@example.com"></div>
-      <div class="form-group"><label>Service Required</label><select name="service" id="serviceSelect" required></select></div>
+      <select name="service" id="serviceSelect" required>
+  <option value="">Select a service</option>
+  <option value="Marble Cutting">Marble Cutting</option>
+  <option value="Granite Cutting">Granite Cutting</option>
+  <option value="Surface Finishing">Surface Finishing</option>
+  <option value="Edge Profiling">Edge Profiling</option>
+  <option value="Waterjet Cutting">Waterjet Cutting</option>
+  <option value="Restoration & Repair">Restoration & Repair</option>
+</select>
       <div class="form-group"><label>Project Details</label><textarea name="message" required placeholder="Tell us about your project or enquiry..."></textarea></div>
       <button type="submit" class="form-submit">Send Enquiry →</button><div id="formStatus"></div>
     </form>
