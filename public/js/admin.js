@@ -1,20 +1,25 @@
 let token = localStorage.getItem("adminToken");
 
-/* Login */
+const loginBox = document.getElementById("login");
+const appBox = document.getElementById("app");
+const errorBox = document.getElementById("err");
+const content = document.getElementById("content");
+
+function headers() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + token
+  };
+}
+
 async function login() {
   const username = document.getElementById("u").value.trim();
   const password = document.getElementById("p").value;
-  const err = document.getElementById("err");
 
-  err.textContent = "";
-
-  if (!username || !password) {
-    err.textContent = "Username and password are required.";
-    return;
-  }
+  errorBox.textContent = "Logging in...";
 
   try {
-    const response = await fetch("/api/login", {
+    const response = await fetch("/api/admin/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -28,8 +33,7 @@ async function login() {
     const data = await response.json();
 
     if (!response.ok) {
-      err.textContent = data.error || "Login failed.";
-      return;
+      throw new Error(data.message || "Invalid username or password");
     }
 
     token = data.token;
@@ -40,285 +44,352 @@ async function login() {
 
   } catch (error) {
     console.error(error);
-    err.textContent = "Server connection failed.";
+    errorBox.textContent =
+      error.message || "Server connection failed.";
   }
 }
 
-/* Show admin panel */
 function showApp() {
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  appBox.classList.remove("hidden");
 }
 
-/* Logout */
 function logout() {
   localStorage.removeItem("adminToken");
   token = null;
 
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("login").classList.remove("hidden");
+  appBox.classList.add("hidden");
+  loginBox.classList.remove("hidden");
 }
 
-/* API helper */
 async function api(url, options = {}) {
-  options.headers = options.headers || {};
-
-  if (token) {
-    options.headers.Authorization = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, options);
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...headers(),
+      ...(options.headers || {})
+    }
+  });
 
   if (response.status === 401) {
     logout();
-    throw new Error("Session expired.");
-  }
-
-  return response;
-}
-
-/* Show section */
-async function show(section) {
-  const content = document.getElementById("content");
-
-  content.innerHTML = "<h2>Loading...</h2>";
-
-  try {
-    if (section === "enquiries") {
-      await loadEnquiries();
-    }
-
-    if (section === "services") {
-      await loadServices();
-    }
-
-    if (section === "gallery") {
-      await loadGallery();
-    }
-
-    if (section === "testimonials") {
-      await loadTestimonials();
-    }
-
-  } catch (error) {
-    console.error(error);
-    content.innerHTML = `
-      <h2>Error</h2>
-      <p>${escapeHtml(error.message)}</p>
-    `;
-  }
-}
-
-/* Enquiries */
-async function loadEnquiries() {
-  const response = await api("/api/enquiries");
-
-  if (!response.ok) {
-    throw new Error("Unable to load enquiries.");
+    throw new Error("Session expired. Please login again.");
   }
 
   const data = await response.json();
 
+  if (!response.ok) {
+    throw new Error(data.message || "Request failed.");
+  }
+
+  return data;
+}
+
+async function show(section) {
+  content.innerHTML = "<p>Loading...</p>";
+
+  try {
+    if (section === "enquiries") {
+      await showEnquiries();
+    }
+
+    if (section === "services") {
+      await showServices();
+    }
+
+    if (section === "gallery") {
+      await showGallery();
+    }
+
+    if (section === "testimonials") {
+      await showTestimonials();
+    }
+
+  } catch (error) {
+    content.innerHTML =
+      `<p style="color:red;">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+async function showEnquiries() {
+  const enquiries = await api("/api/admin/enquiries");
+
   let html = `
-    <h2>Enquiries</h2>
+    <h1>Customer Enquiries</h1>
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
           <th>Name</th>
           <th>Phone</th>
           <th>Email</th>
-          <th>Message</th>
-          <th>Date</th>
+          <th>Service</th>
+          <th>Project Details</th>
+          <th>Status</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
   `;
 
-  if (!Array.isArray(data) || data.length === 0) {
+  if (enquiries.length === 0) {
     html += `
       <tr>
-        <td colspan="5">No enquiries found.</td>
+        <td colspan="7">No enquiries yet.</td>
       </tr>
     `;
-  } else {
-    data.forEach(item => {
-      html += `
-        <tr>
-          <td>${escapeHtml(item.name || "")}</td>
-          <td>${escapeHtml(item.phone || "")}</td>
-          <td>${escapeHtml(item.email || "")}</td>
-          <td>${escapeHtml(item.message || "")}</td>
-          <td>${escapeHtml(item.created_at || "")}</td>
-        </tr>
-      `;
-    });
   }
+
+  enquiries.forEach(item => {
+    html += `
+      <tr>
+        <td>${escapeHtml(item.name)}</td>
+        <td>${escapeHtml(item.phone)}</td>
+        <td>${escapeHtml(item.email || "")}</td>
+        <td>${escapeHtml(item.service || "")}</td>
+        <td>${escapeHtml(item.message)}</td>
+        <td>${escapeHtml(item.status)}</td>
+        <td>
+          <button onclick="deleteEnquiry(${item.id})">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `;
+  });
 
   html += `
       </tbody>
     </table>
+    </div>
   `;
 
-  document.getElementById("content").innerHTML = html;
+  content.innerHTML = html;
 }
 
-/* Services */
-async function loadServices() {
-  const response = await api("/api/services");
+async function deleteEnquiry(id) {
+  if (!confirm("Delete this enquiry?")) return;
 
-  if (!response.ok) {
-    throw new Error("Unable to load services.");
+  try {
+    await api("/api/admin/enquiries/" + id, {
+      method: "DELETE"
+    });
+
+    show("enquiries");
+
+  } catch (error) {
+    alert(error.message);
   }
+}
 
-  const data = await response.json();
+async function showServices() {
+  const services = await api("/api/admin/services");
 
   let html = `
-    <h2>Services</h2>
-    <p>Services available from the website API.</p>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
+    <h1>Services</h1>
+
+    <div class="admin-form">
+      <input id="serviceTitle" placeholder="Service title">
+      <input id="serviceDescription" placeholder="Description">
+      <input id="serviceIcon" placeholder="Icon e.g. 🪨">
+      <input id="serviceTags" placeholder="Tags">
+      <button onclick="addService()">Add Service</button>
+    </div>
+
+    <div class="items">
   `;
 
-  if (!Array.isArray(data) || data.length === 0) {
+  services.forEach(item => {
     html += `
-      <tr>
-        <td colspan="3">No services found.</td>
-      </tr>
+      <div class="item">
+        <h3>${escapeHtml(item.icon || "")} ${escapeHtml(item.title)}</h3>
+        <p>${escapeHtml(item.description)}</p>
+        <small>${escapeHtml(item.tags || "")}</small>
+        <br>
+        <button onclick="deleteService(${item.id})">
+          Delete
+        </button>
+      </div>
     `;
-  } else {
-    data.forEach(item => {
-      html += `
-        <tr>
-          <td>${escapeHtml(String(item.id || ""))}</td>
-          <td>${escapeHtml(item.name || "")}</td>
-          <td>${escapeHtml(item.description || "")}</td>
-        </tr>
-      `;
-    });
-  }
+  });
 
-  html += `
-      </tbody>
-    </table>
-  `;
+  html += "</div>";
 
-  document.getElementById("content").innerHTML = html;
+  content.innerHTML = html;
 }
 
-/* Gallery */
-async function loadGallery() {
-  const response = await api("/api/gallery");
+async function addService() {
+  const title = document.getElementById("serviceTitle").value;
+  const description =
+    document.getElementById("serviceDescription").value;
+  const icon = document.getElementById("serviceIcon").value;
+  const tags = document.getElementById("serviceTags").value;
 
-  if (!response.ok) {
-    throw new Error("Unable to load gallery.");
+  try {
+    await api("/api/admin/services", {
+      method: "POST",
+      body: JSON.stringify({
+        title,
+        description,
+        icon,
+        tags
+      })
+    });
+
+    show("services");
+
+  } catch (error) {
+    alert(error.message);
   }
+}
 
-  const data = await response.json();
+async function deleteService(id) {
+  if (!confirm("Delete this service?")) return;
+
+  await api("/api/admin/services/" + id, {
+    method: "DELETE"
+  });
+
+  show("services");
+}
+
+async function showGallery() {
+  const gallery = await api("/api/admin/gallery");
 
   let html = `
-    <h2>Gallery</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Image</th>
-          <th>Title</th>
-        </tr>
-      </thead>
-      <tbody>
+    <h1>Gallery</h1>
+
+    <div class="admin-form">
+      <input id="galleryTitle" placeholder="Image title">
+      <input id="galleryImage" placeholder="/assets/image.jpg">
+      <button onclick="addGallery()">Add Image</button>
+    </div>
+
+    <div class="items">
   `;
 
-  if (!Array.isArray(data) || data.length === 0) {
+  gallery.forEach(item => {
     html += `
-      <tr>
-        <td colspan="3">No gallery items found.</td>
-      </tr>
+      <div class="item">
+        <h3>${escapeHtml(item.title)}</h3>
+        <img
+          src="${escapeAttribute(item.image)}"
+          style="max-width:250px;border-radius:8px;"
+        >
+        <br>
+        <button onclick="deleteGallery(${item.id})">
+          Delete
+        </button>
+      </div>
     `;
-  } else {
-    data.forEach(item => {
-      html += `
-        <tr>
-          <td>${escapeHtml(String(item.id || ""))}</td>
-          <td>
-            ${
-              item.image
-                ? `<img src="${escapeAttribute(item.image)}" width="80" alt="Gallery image">`
-                : "No image"
-            }
-          </td>
-          <td>${escapeHtml(item.title || "")}</td>
-        </tr>
-      `;
-    });
-  }
+  });
 
-  html += `
-      </tbody>
-    </table>
-  `;
+  html += "</div>";
 
-  document.getElementById("content").innerHTML = html;
+  content.innerHTML = html;
 }
 
-/* Testimonials */
-async function loadTestimonials() {
-  const response = await api("/api/testimonials");
+async function addGallery() {
+  const title = document.getElementById("galleryTitle").value;
+  const image = document.getElementById("galleryImage").value;
 
-  if (!response.ok) {
-    throw new Error("Unable to load testimonials.");
+  try {
+    await api("/api/admin/gallery", {
+      method: "POST",
+      body: JSON.stringify({
+        title,
+        image
+      })
+    });
+
+    show("gallery");
+
+  } catch (error) {
+    alert(error.message);
   }
+}
 
-  const data = await response.json();
+async function deleteGallery(id) {
+  if (!confirm("Delete this image?")) return;
+
+  await api("/api/admin/gallery/" + id, {
+    method: "DELETE"
+  });
+
+  show("gallery");
+}
+
+async function showTestimonials() {
+  const testimonials = await api("/api/admin/testimonials");
 
   let html = `
-    <h2>Testimonials</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Message</th>
-        </tr>
-      </thead>
-      <tbody>
+    <h1>Testimonials</h1>
+
+    <div class="admin-form">
+      <input id="testName" placeholder="Name">
+      <input id="testRole" placeholder="Role">
+      <input id="testInitials" placeholder="Initials">
+      <textarea id="testText" placeholder="Testimonial"></textarea>
+      <button onclick="addTestimonial()">Add Testimonial</button>
+    </div>
+
+    <div class="items">
   `;
 
-  if (!Array.isArray(data) || data.length === 0) {
+  testimonials.forEach(item => {
     html += `
-      <tr>
-        <td colspan="3">No testimonials found.</td>
-      </tr>
+      <div class="item">
+        <h3>${escapeHtml(item.name)}</h3>
+        <small>${escapeHtml(item.role || "")}</small>
+        <p>${escapeHtml(item.text)}</p>
+        <button onclick="deleteTestimonial(${item.id})">
+          Delete
+        </button>
+      </div>
     `;
-  } else {
-    data.forEach(item => {
-      html += `
-        <tr>
-          <td>${escapeHtml(String(item.id || ""))}</td>
-          <td>${escapeHtml(item.name || "")}</td>
-          <td>${escapeHtml(item.message || "")}</td>
-        </tr>
-      `;
-    });
-  }
+  });
 
-  html += `
-      </tbody>
-    </table>
-  `;
+  html += "</div>";
 
-  document.getElementById("content").innerHTML = html;
+  content.innerHTML = html;
 }
 
-/* Security helpers */
+async function addTestimonial() {
+  const name = document.getElementById("testName").value;
+  const role = document.getElementById("testRole").value;
+  const initials = document.getElementById("testInitials").value;
+  const text = document.getElementById("testText").value;
+
+  try {
+    await api("/api/admin/testimonials", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        role,
+        initials,
+        text
+      })
+    });
+
+    show("testimonials");
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function deleteTestimonial(id) {
+  if (!confirm("Delete this testimonial?")) return;
+
+  await api("/api/admin/testimonials/" + id, {
+    method: "DELETE"
+  });
+
+  show("testimonials");
+}
+
 function escapeHtml(value) {
-  return String(value)
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -330,7 +401,6 @@ function escapeAttribute(value) {
   return escapeHtml(value);
 }
 
-/* Check existing login */
 if (token) {
   showApp();
   show("enquiries");
