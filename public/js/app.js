@@ -209,7 +209,7 @@ Service: ${service}
 Project Details: ${message}`;
 
         const whatsappUrl =
-          "https://wa.me/96879159463?text=" +
+          "https://wa.me/96879159463?text=" +96879159463
           encodeURIComponent(whatsappMessage);
 
         if (formStatus) {
