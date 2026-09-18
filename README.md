@@ -19,15 +19,7 @@ Node.js 18+ recommended.
 npm install
 npm start
 ```
-Open:
-- Website: http://localhost:3000
-- Admin: http://localhost:3000/admin
 
-## Default admin
-Username: `admin`
-Password: `Admin@12345`
-
-Change the credentials/password implementation before production.
 
 ## Assets
 Put the original `logo.jpg`, `img1.jpg`, `img2.jpg`, `img3.jpg`, and `img4.jpg` inside `public/assets/`.
