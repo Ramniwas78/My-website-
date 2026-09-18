@@ -1,4 +1,79 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Panel - Al Bidoor Marble</title><link rel="stylesheet" href="/css/admin.css"></head><body>
-<div id="login" class="login"><div class="box"><h1>Al Bidoor Admin</h1><input id="u" placeholder="Username" value="admin"><input id="p" type="password" placeholder="Password"><button onclick="login()">Login</button><p id="err"></p><small>Change the default password after first login.</small></div></div>
-<div id="app" class="hidden"><aside><h2>Al Bidoor</h2><button onclick="show('enquiries')">Enquiries</button><button onclick="show('services')">Services</button><button onclick="show('gallery')">Gallery</button><button onclick="show('testimonials')">Testimonials</button><a href="/" target="_blank">View Website</a><button onclick="logout()">Logout</button></aside><main><div id="content"></div></main></div>
-<script src="/js/admin.js"></script></body></html>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Panel - Al Bidoor Marble</title>
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+
+<div id="login" class="login">
+  <div class="box">
+    <h1>Al Bidoor Admin</h1>
+
+    <input id="u" placeholder="Username" value="admin">
+
+    <input
+      id="p"
+      type="password"
+      placeholder="Password"
+    >
+
+    <button onclick="login()">Login</button>
+
+    <p id="err"></p>
+
+    <small>
+      Change the default password after first login.
+    </small>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+
+  <aside>
+
+    <h2>Al Bidoor</h2>
+
+    <button onclick="show('enquiries')">
+      Enquiries
+    </button>
+
+    <button onclick="show('services')">
+      Services
+    </button>
+
+    <button onclick="show('gallery')">
+      Gallery
+    </button>
+
+    <button onclick="show('testimonials')">
+      Testimonials
+    </button>
+
+    <button onclick="show('password')">
+      Change Password
+    </button>
+
+    <a href="/" target="_blank">
+      View Website
+    </a>
+
+    <button onclick="logout()">
+      Logout
+    </button>
+
+  </aside>
+
+  <main>
+    <div id="content"></div>
+  </main>
+
+</div>
+
+<script src="/js/admin.js"></script>
+
+</body>
+</html>
