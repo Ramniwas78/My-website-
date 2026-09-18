@@ -51,6 +51,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     servicesGrid.innerHTML = "";
 
+    if (serviceSelect) {
+      serviceSelect.innerHTML =
+        '<option value="">Select a service</option>';
+    }
+
+    if (footerServices) {
+      footerServices.innerHTML = "";
+    }
+
     if (services.length === 0) {
       servicesGrid.innerHTML = "<p>No services available.</p>";
       return;
@@ -77,7 +86,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (footerServices) {
         const li = document.createElement("li");
-        li.innerHTML = `<a href="#services">${escapeHtml(service.title)}</a>`;
+        li.innerHTML =
+          `<a href="#services">${escapeHtml(service.title)}</a>`;
         footerServices.appendChild(li);
       }
     });
@@ -89,7 +99,8 @@ document.addEventListener("DOMContentLoaded", () => {
     galleryGrid.innerHTML = "";
 
     if (gallery.length === 0) {
-      galleryGrid.innerHTML = "<p>No gallery images available.</p>";
+      galleryGrid.innerHTML =
+        "<p>No gallery images available.</p>";
       return;
     }
 
@@ -99,7 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
       wrapper.innerHTML = `
         <img
           src="${escapeAttribute(item.image)}"
-          alt="${escapeAttribute(item.title || "Al Bidoor Marble Project")}"
+          alt="${escapeAttribute(
+            item.title || "Al Bidoor Marble Project"
+          )}"
           loading="lazy"
         >
       `;
@@ -133,97 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (contactForm) { if (contactForm) {
-  contactForm.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const submitButton = contactForm.querySelector(".form-submit");
-    const formData = new FormData(contactForm);
-
-    const name = formData.get("name");
-    const phone = formData.get("phone");
-    const email = formData.get("email");
-    const service = formData.get("service");
-    const message = formData.get("message");
-
-    const payload = {
-      name,
-      phone,
-      email,
-      service,
-      message
-    };
-
-    if (formStatus) {
-      formStatus.textContent = "Sending enquiry...";
-      formStatus.style.color = "#c49a5a";
-    }
-
-    if (submitButton) {
-      submitButton.disabled = true;
-    }
-
-    try {
-      // 1. Save enquiry in admin panel/database
-      const response = await fetch("/api/enquiries", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Unable to send enquiry."
-        );
-      }
-
-      // 2. Create WhatsApp message
-      const whatsappMessage =
-`Hello Al Bidoor Marble Company,
-
-New Customer Enquiry
-
-Name: ${name}
-Phone: ${phone}
-Email: ${email || "Not provided"}
-Service: ${service}
-Project Details: ${message}`;
-
-      // 3. Open WhatsApp
-      const whatsappUrl =
-        "https://wa.me/+917878330075?text=" +
-        encodeURIComponent(whatsappMessage);
-
-      if (formStatus) {
-        formStatus.textContent =
-          "Enquiry saved successfully. Opening WhatsApp...";
-        formStatus.style.color = "#16803c";
-      }
-
-      contactForm.reset();
-
-      window.open(whatsappUrl, "_blank");
-
-    } catch (error) {
-      console.error("Enquiry error:", error);
-
-      if (formStatus) {
-        formStatus.textContent =
-          error.message || "Something went wrong.";
-        formStatus.style.color = "#c62828";
-      }
-
-    } finally {
-      if (submitButton) {
-        submitButton.disabled = false;
-      }
-    }
-  });
-}
+  if (contactForm) {
     contactForm.addEventListener("submit", async event => {
       event.preventDefault();
 
@@ -232,16 +155,22 @@ Project Details: ${message}`;
 
       const formData = new FormData(contactForm);
 
+      const name = formData.get("name");
+      const phone = formData.get("phone");
+      const email = formData.get("email");
+      const service = formData.get("service");
+      const message = formData.get("message");
+
       const payload = {
-        name: formData.get("name"),
-        phone: formData.get("phone"),
-        email: formData.get("email"),
-        service: formData.get("service"),
-        message: formData.get("message")
+        name,
+        phone,
+        email,
+        service,
+        message
       };
 
       if (formStatus) {
-        formStatus.textContent = "Sending...";
+        formStatus.textContent = "Sending enquiry...";
         formStatus.style.color = "#c49a5a";
       }
 
@@ -250,6 +179,7 @@ Project Details: ${message}`;
       }
 
       try {
+        // Save enquiry in database
         const response = await fetch("/api/enquiries", {
           method: "POST",
           headers: {
@@ -266,13 +196,32 @@ Project Details: ${message}`;
           );
         }
 
+        // WhatsApp message
+        const whatsappMessage =
+`Hello Al Bidoor Marble Company,
+
+New Customer Enquiry
+
+Name: ${name}
+Phone: ${phone}
+Email: ${email || "Not provided"}
+Service: ${service}
+Project Details: ${message}`;
+
+        const whatsappUrl =
+          "https://wa.me/96879159463?text=" +
+          encodeURIComponent(whatsappMessage);
+
         if (formStatus) {
           formStatus.textContent =
-            data.message || "Your enquiry has been received.";
+            "Enquiry saved successfully. Opening WhatsApp...";
           formStatus.style.color = "#16803c";
         }
 
         contactForm.reset();
+
+        // Open WhatsApp
+        window.open(whatsappUrl, "_blank");
 
       } catch (error) {
         console.error("Enquiry error:", error);
@@ -306,3 +255,4 @@ Project Details: ${message}`;
 
   loadWebsiteData();
 });
+  
