@@ -133,7 +133,97 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (contactForm) {
+  if (contactForm) { if (contactForm) {
+  contactForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const submitButton = contactForm.querySelector(".form-submit");
+    const formData = new FormData(contactForm);
+
+    const name = formData.get("name");
+    const phone = formData.get("phone");
+    const email = formData.get("email");
+    const service = formData.get("service");
+    const message = formData.get("message");
+
+    const payload = {
+      name,
+      phone,
+      email,
+      service,
+      message
+    };
+
+    if (formStatus) {
+      formStatus.textContent = "Sending enquiry...";
+      formStatus.style.color = "#c49a5a";
+    }
+
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
+    try {
+      // 1. Save enquiry in admin panel/database
+      const response = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Unable to send enquiry."
+        );
+      }
+
+      // 2. Create WhatsApp message
+      const whatsappMessage =
+`Hello Al Bidoor Marble Company,
+
+New Customer Enquiry
+
+Name: ${name}
+Phone: ${phone}
+Email: ${email || "Not provided"}
+Service: ${service}
+Project Details: ${message}`;
+
+      // 3. Open WhatsApp
+      const whatsappUrl =
+        "https://wa.me/96896272666?text=" +
+        encodeURIComponent(whatsappMessage);
+
+      if (formStatus) {
+        formStatus.textContent =
+          "Enquiry saved successfully. Opening WhatsApp...";
+        formStatus.style.color = "#16803c";
+      }
+
+      contactForm.reset();
+
+      window.open(whatsappUrl, "_blank");
+
+    } catch (error) {
+      console.error("Enquiry error:", error);
+
+      if (formStatus) {
+        formStatus.textContent =
+          error.message || "Something went wrong.";
+        formStatus.style.color = "#c62828";
+      }
+
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
+    }
+  });
+}
     contactForm.addEventListener("submit", async event => {
       event.preventDefault();
 
