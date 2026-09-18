@@ -198,20 +198,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // WhatsApp message
         const whatsappMessage =
-  "Hello Al Bidoor Marble Company\n\n" +
-  "New Customer Enquiry\n\n" +
-  "Name: " + (name || "Not provided") + "\n" +
-  "Customer Phone: " + (phone || "Not provided") + "\n" +
-  "Email: " + (email || "Not provided") + "\n" +
-  "Service: " + (service || "Not selected") + "\n" +
-  "Project Details: " + (message || "Not provided");
-
-const whatsappUrl =
-  "https://wa.me/96879159463?text=" +
-  encodeURIComponent(whatsappMessage);
+          "Hello Al Bidoor Marble Company\n\n" +
+          "New Customer Enquiry\n\n" +
+          "Name: " + (name || "Not provided") + "\n" +
+          "Customer Phone: " + (phone || "Not provided") + "\n" +
+          "Email: " + (email || "Not provided") + "\n" +
+          "Service: " + (service || "Not selected") + "\n" +
+          "Project Details: " + (message || "Not provided");
 
         const whatsappUrl =
-          "https://wa.me/96879159463?text=" +96879159463
+          "https://wa.me/96879159463?text=" +
           encodeURIComponent(whatsappMessage);
 
         if (formStatus) {
@@ -223,7 +219,7 @@ const whatsappUrl =
         contactForm.reset();
 
         // Open WhatsApp
-        window.open(whatsappUrl, "_blank");
+        window.location.href = whatsappUrl;
 
       } catch (error) {
         console.error("Enquiry error:", error);
@@ -257,4 +253,3 @@ const whatsappUrl =
 
   loadWebsiteData();
 });
-  
